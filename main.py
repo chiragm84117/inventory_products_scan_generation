@@ -4,6 +4,7 @@ import numpy as np
 import os
 import pyimgur
 from serpapi import GoogleSearch
+from api_access_key import imgur_CLIENT_ID,lens_api_key
 
 
 def save_uploaded_file(uploaded_image):
@@ -34,7 +35,7 @@ def generated_text_box(count):
 
 
 def upload(name):
-    CLIENT_ID = "f8562b07ca9f126"
+    CLIENT_ID = imgur_CLIENT_ID
     folder_path = r'C:\code\inventory_product_desc\uploads'
     file_path = name
     PATH = os.path.join(folder_path, file_path)
@@ -51,7 +52,7 @@ def call_lens_api(link):
         "hl":"en",
         "country" : "in",
         "url": link,
-        "api_key": "f95e1b6b1ba44ee7fa58d5a2a9a07b42818db8f0bc25cd781fa361f8a8ed738b"
+        "api_key": lens_api_key
     }
     search = GoogleSearch(params)
     results = search.get_json()
