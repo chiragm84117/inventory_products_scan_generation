@@ -48,13 +48,51 @@ def upload(name):
 def call_lens_api(link):
     params = {
         "engine": "google_lens",
+        "hl":"en",
+        "country" : "in",
         "url": link,
         "api_key": "f95e1b6b1ba44ee7fa58d5a2a9a07b42818db8f0bc25cd781fa361f8a8ed738b"
     }
     search = GoogleSearch(params)
-    results = search.get_dict()
-    print(results)
-    return results
+    results = search.get_json()
+    # for checking if both are present in json or not
+
+    visual_matches_exist = 'visual_matches' in results
+    text_results_exist = 'text_results' in results
+    knowledge_exist = 'knowledge_graph' in results
+
+    information_graph = []
+
+    if knowledge_exist:
+        for item in results['knowledge_graph']:
+            title = item['title']
+            information_graph.append(title)
+            subtitle = item['subtitle']
+            information_graph.append(subtitle)
+
+    if text_results_exist:
+        text_result = ' '.join(item['text'] for item in results.get('text_results', []))
+        information_graph.append(text_result)
+
+    if visual_matches_exist:
+        for item in results['visual_matches']:
+            visual = item['title']
+            information_graph.append(visual)
+
+    for knowledge_entry in results.get("knowledge_graph", []):
+        # Check if "shopping_results" key is available in the current entry
+        if "shopping_results" in knowledge_entry:
+            # Access shopping_results for the current entry
+            shopping_results = knowledge_entry["shopping_results"]
+            # Iterate through shopping results
+            for shopping_result in shopping_results:
+                price = shopping_result.get("price", "")
+                information_graph.append(price)
+                snippet = shopping_result.get("snippet", "")
+                information_graph.append(snippet)
+
+    print(information_graph)
+    return information_graph
 
 
 # print the title on the UI
@@ -85,7 +123,7 @@ if picture is not None:
     link = upload(picture.name)
 
     # call the google lens API
-    result = call_lens_api(link)
+    information_graph = call_lens_api(link)
 
 
     # print the upload picture
