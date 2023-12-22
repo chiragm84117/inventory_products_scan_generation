@@ -16,7 +16,7 @@ def save_uploaded_file(uploaded_image):
         return False
 
 
-def call_llm(count):
+def call_llm(information_graph,count):
     if count == 1:
         text1 = "chirag"
         return text1
@@ -25,8 +25,8 @@ def call_llm(count):
         return text2
 
 
-def generated_text_box(count):
-    text = call_llm(count)
+def generated_text_box(information_graph,count):
+    text = call_llm(information_graph,count)
     # here the llm model will be called to generate the text from the data can from the google lens
     st.text_area(label="Generating", value=text, placeholder="This might take the moment.........", disabled=True,
                  height=200)
@@ -61,8 +61,14 @@ def call_lens_api(link):
     visual_matches_exist = 'visual_matches' in results
     text_results_exist = 'text_results' in results
     knowledge_exist = 'knowledge_graph' in results
+    related_content_exist ='related_content' in results
 
     information_graph = []
+
+    if related_content_exist:
+        for item in results['related_content']:
+            content = item['query']
+            information_graph.append(content)
 
     if knowledge_exist:
         for item in results['knowledge_graph']:
@@ -70,6 +76,17 @@ def call_lens_api(link):
             information_graph.append(title)
             subtitle = item['subtitle']
             information_graph.append(subtitle)
+        for knowledge_entry in results.get("knowledge_graph", []):
+            # Check if "shopping_results" key is available in the current entry
+            if "shopping_results" in knowledge_entry:
+                # Access shopping_results for the current entry
+                shopping_results = knowledge_entry["shopping_results"]
+                # Iterate through shopping results
+                for shopping_result in shopping_results:
+                    price = shopping_result.get("price", "")
+                    information_graph.append(price)
+                    snippet = shopping_result.get("snippet", "")
+                    information_graph.append(snippet)
 
     if text_results_exist:
         text_result = ' '.join(item['text'] for item in results.get('text_results', []))
@@ -80,17 +97,7 @@ def call_lens_api(link):
             visual = item['title']
             information_graph.append(visual)
 
-    for knowledge_entry in results.get("knowledge_graph", []):
-        # Check if "shopping_results" key is available in the current entry
-        if "shopping_results" in knowledge_entry:
-            # Access shopping_results for the current entry
-            shopping_results = knowledge_entry["shopping_results"]
-            # Iterate through shopping results
-            for shopping_result in shopping_results:
-                price = shopping_result.get("price", "")
-                information_graph.append(price)
-                snippet = shopping_result.get("snippet", "")
-                information_graph.append(snippet)
+
 
     print(information_graph)
     return information_graph
@@ -139,9 +146,9 @@ if picture is not None:
     with col2:
         count = 1
         st.header("Description :")
-        text1 = generated_text_box(count)
+        text1 = generated_text_box(information_graph,count)
         count = count + 1
         next_decs1 = st.button(label="generate other")
         if next_decs1 == True:
-            text2 = generated_text_box(count)
+            text2 = generated_text_box(information_graph,count)
             count = count + 1
